@@ -1,3 +1,4 @@
+use core::fmt;
 use rustyline::error::ReadlineError;
 use rustyline::{DefaultEditor, Result};
 use serde::{Deserialize, Serialize};
@@ -6,8 +7,24 @@ use std::io;
 
 #[derive(Serialize, Deserialize)]
 struct Todo {
-    status: String,
+    status: Status,
     title: String,
+}
+
+#[derive(Serialize, Deserialize)]
+enum Status {
+    Pending,
+    Completed,
+}
+
+impl fmt::Display for Status {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let text = match self {
+            Status::Pending => "pending",
+            Status::Completed => "completed",
+        };
+        write!(f, "{text}")
+    }
 }
 
 fn list_todos(todos: &[Todo]) {
@@ -62,7 +79,7 @@ fn create_todo(todos: &mut Vec<Todo>) {
     }
     todos.push(Todo {
         title,
-        status: String::from("pending"),
+        status: Status::Pending,
     });
 }
 
@@ -83,7 +100,7 @@ fn check_todo(todos: &mut [Todo]) {
         println!("Error index too big");
         return;
     }
-    todos[number].status = String::from("Completed");
+    todos[number].status = Status::Completed;
 }
 
 fn main() -> Result<()> {
