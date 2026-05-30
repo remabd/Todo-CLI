@@ -17,6 +17,13 @@ enum Status {
     Completed,
 }
 
+enum Action {
+    Continue,
+    Break,
+}
+
+const FILE_PATH: &str = "data/todos.json";
+
 impl fmt::Display for Status {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         let text = match self {
@@ -67,18 +74,17 @@ fn delete_todo(todos: &mut Vec<Todo>) {
     }
 }
 
-fn create_todo(todos: &mut Vec<Todo>) {
-    println!("Enter todo name: ");
-    let mut title = String::new();
-    io::stdin()
-        .read_line(&mut title)
-        .expect("Failed to read line");
-    if title.is_empty() {
-        println!("Cancelled");
+fn create_todo(todos: &mut Vec<Todo>, args: &Vec<&str>) {
+    if args.len() != 1 {
+        print!("Too much arguments: {}", args.len());
         return;
     }
+    let Some(name) = args.first() else {
+        println!("Bad argument: <name>");
+        return;
+    };
     todos.push(Todo {
-        title,
+        title: String::from(*name),
         status: Status::Pending,
     });
 }
@@ -116,13 +122,8 @@ fn main() -> Result<()> {
             Ok(line) => {
                 rl.add_history_entry(line.as_str())?;
                 println!("Line: {}", line);
-                match line.as_str() {
-                    "add" | "create" => create_todo(&mut todos),
-                    "ls" => list_todos(&todos),
-                    "rm" | "delete" => delete_todo(&mut todos),
-                    "check" => check_todo(&mut todos),
-                    "quit" => break,
-                    other => println!("unknown command: {other}"),
+                if let Action::Break = handle_input(&line, &mut todos) {
+                    break;
                 }
             }
             Err(ReadlineError::Interrupted) => {
@@ -145,15 +146,45 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+fn handle_input(input: &str, todos: &mut Vec<Todo>) -> Action {
+    let mut input = input.split_whitespace();
+    let command = input.next();
+    let args: Vec<&str> = input.collect();
+    match command {
+        Some("add") | Some("create") => create_todo(todos, &args),
+        Some("ls") => list_todos(&todos),
+        Some("rm") | Some("delete") => delete_todo(todos, &args),
+        Some("check") => check_todo(todos, &args),
+        Some("quit") => return Action::Break,
+        Some(other) => println!("unknown command: {}", other),
+        None => {}
+    }
+    Action::Continue
+}
+
+// fn verify_args(args: &Vec<&str>, todos: &Vec<Todo>) {
+//     let args_nb = args.len();
+//     if args_nb != 1 {
+//         println!("Wrong number of arguments!");
+//         Action::Break
+//     } else {
+//         let correct = todos.iter().any(|todo| todo.title == args[0]);
+//         if !correct {
+//             println!("Bad argument, todo named {} doesn't exist", args[0]);
+//             Action::Break
+//         } else {
+//             Action::Continue
+//         }
+//     }
+// }
+
 fn import_todos() -> Vec<Todo> {
-    let file_path = "data/todos.json";
-    let content = fs::read_to_string(file_path).expect("Couldn't find or load todos");
+    let content = fs::read_to_string(FILE_PATH).expect("Couldn't find or load todos");
     let todos: Vec<Todo> = serde_json::from_str(&content).expect("couldn't parse the todos");
     todos
 }
 
 fn export_todos(todos: Vec<Todo>) {
-    let file_path = "data/todos.json";
     let todos: String = serde_json::to_string(&todos).expect("couldn't serialize todos");
-    fs::write(file_path, todos).expect("Couldn't write file");
+    fs::write(FILE_PATH, todos).expect("Couldn't write file");
 }
