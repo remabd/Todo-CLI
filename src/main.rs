@@ -40,7 +40,7 @@ fn list_todos(todos: &[Todo]) {
     }
 }
 
-fn delete_todo(todos: &mut Vec<Todo>) {
+fn delete_todo(todos: &mut Vec<Todo>, _args: &Vec<&str>) {
     println!("Enter todo's number to delete");
     let mut input = String::new();
     io::stdin()
@@ -75,38 +75,30 @@ fn delete_todo(todos: &mut Vec<Todo>) {
 }
 
 fn create_todo(todos: &mut Vec<Todo>, args: &Vec<&str>) {
-    if args.len() != 1 {
-        print!("Too much arguments: {}", args.len());
-        return;
-    }
     let Some(name) = args.first() else {
-        println!("Bad argument: <name>");
+        println!("No arguments, need one");
         return;
     };
+    if args.len() > 1 {
+        println!("Too much arguments, need only one");
+        return;
+    }
     todos.push(Todo {
         title: String::from(*name),
         status: Status::Pending,
     });
 }
 
-fn check_todo(todos: &mut [Todo]) {
-    println!("Enter todo's number to check");
-    let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .expect("Failed to read line");
-    let number: usize = match input.trim().parse() {
-        Ok(n) => n,
-        Err(_) => {
-            println!("Not a valid number.");
-            return;
-        }
-    };
-    if number >= todos.len() {
-        println!("Error index too big");
+fn check_todo(todos: &mut [Todo], args: &Vec<&str>) {
+    let Some(id) = args.first() else {
+        println!("No arguments, need one");
         return;
-    }
-    todos[number].status = Status::Completed;
+    };
+    let Some(i) = todos.iter().position(|t| t.title == *id) else {
+        println!("No todo named: {}", *id);
+        return;
+    };
+    todos[i].status = Status::Completed
 }
 
 fn main() -> Result<()> {
