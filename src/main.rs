@@ -3,7 +3,6 @@ use rustyline::error::ReadlineError;
 use rustyline::{DefaultEditor, Result};
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::io;
 
 #[derive(Serialize, Deserialize)]
 struct Todo {
@@ -40,38 +39,20 @@ fn list_todos(todos: &[Todo]) {
     }
 }
 
-fn delete_todo(todos: &mut Vec<Todo>, _args: &Vec<&str>) {
-    println!("Enter todo's number to delete");
-    let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .expect("Failed to read line");
-    let number: usize = match input.trim().parse() {
-        Ok(n) => n,
-        Err(_) => {
-            println!("Not a valid number.");
-            return;
-        }
+fn delete_todo(todos: &mut Vec<Todo>, args: &Vec<&str>) {
+    let Some(name) = args.first() else {
+        println!("No arguments, need one");
+        return;
     };
-
-    println!("Are you sure to delete todo number {number}? (Y/n)");
-    let mut confirm = String::new();
-    io::stdin()
-        .read_line(&mut confirm)
-        .expect("failed to read line");
-    let confirm = confirm.trim().to_lowercase();
-    if confirm == "n" || confirm == "no" {
-        println!("Cancelled.");
+    if args.len() > 1 {
+        println!("Too much arguments, need only one");
         return;
     }
-
-    let before = todos.len();
-    todos.remove(number);
-    if todos.len() == before {
-        println!("No todo with number {number}.");
-    } else {
-        println!("Deleted.");
-    }
+    let Some(i) = todos.iter().position(|todo| todo.title == *name) else {
+        println!("Todo name incorrect");
+        return;
+    };
+    todos.remove(i);
 }
 
 fn create_todo(todos: &mut Vec<Todo>, args: &Vec<&str>) {
