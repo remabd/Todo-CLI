@@ -135,22 +135,6 @@ fn handle_input(input: &str, todos: &mut Vec<Todo>) -> Action {
     Action::Continue
 }
 
-// fn verify_args(args: &Vec<&str>, todos: &Vec<Todo>) {
-//     let args_nb = args.len();
-//     if args_nb != 1 {
-//         println!("Wrong number of arguments!");
-//         Action::Break
-//     } else {
-//         let correct = todos.iter().any(|todo| todo.title == args[0]);
-//         if !correct {
-//             println!("Bad argument, todo named {} doesn't exist", args[0]);
-//             Action::Break
-//         } else {
-//             Action::Continue
-//         }
-//     }
-// }
-
 fn import_todos() -> Vec<Todo> {
     let content = fs::read_to_string(FILE_PATH).expect("Couldn't find or load todos");
     let todos: Vec<Todo> = serde_json::from_str(&content).expect("couldn't parse the todos");
