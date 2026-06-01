@@ -126,7 +126,7 @@ fn handle_input(input: &str, todos: &mut Vec<Todo>) -> Action {
     match command {
         Some("add") | Some("create") => create_todo(todos, &args),
         Some("ls") => list_todos(&todos),
-        Some("rm") | Some("delete") => delete_todo(todos, &args),
+        Some("rm") | Some("delete") | Some("remove") => delete_todo(todos, &args),
         Some("check") => check_todo(todos, &args),
         Some("quit") => return Action::Break,
         Some(other) => println!("unknown command: {}", other),
